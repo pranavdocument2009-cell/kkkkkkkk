@@ -257,12 +257,24 @@
       overflow: hidden;
     }
 
-    video {
+    video,
+    iframe {
       width: 100%;
       height: 100%;
       min-height: 360px;
       background: #050506;
+    }
+
+    video {
       object-fit: contain;
+    }
+
+    iframe {
+      border: 0;
+    }
+
+    .is-hidden {
+      display: none;
     }
 
     .now-playing {
@@ -382,7 +394,7 @@
         rating: "TV-14",
         genre: "Action Fantasy",
         status: "Season 1",
-        poster: "https://ik.imagekit.io/h0awrqsah/MV5BOWRlZDA5YjUtNjk3MC00YjRkLWEyYTUtM2ExYWUwNDRlN2UxXkEyXkFqcGc@._V1_.jpg?updatedAt=1781551512608",
+        poster: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
         banner: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80",
         description: "A rookie swordswoman enters a floating academy where rival houses duel above the clouds for the right to guard the sky realm.",
         episodes: [
@@ -586,6 +598,13 @@
               <source src="" type="video/mp4">
               Your browser does not support the video tag.
             </video>
+            <iframe
+              class="is-hidden"
+              id="embedPlayer"
+              title="Episode embed player"
+              allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen>
+            </iframe>
             <div class="now-playing">
               <p class="eyebrow">Now playing</p>
               <h2 id="nowTitle">Select an episode</h2>
@@ -627,9 +646,24 @@
 
     function loadEpisode(episode, buttons, shouldScroll) {
       const player = document.getElementById("episodePlayer");
+      const embedPlayer = document.getElementById("embedPlayer");
       const source = player.querySelector("source");
-      source.src = episode.video;
-      player.load();
+      const isDirectVideo = episode.video.toLowerCase().includes(".mp4");
+
+      if (isDirectVideo) {
+        embedPlayer.src = "";
+        embedPlayer.classList.add("is-hidden");
+        player.classList.remove("is-hidden");
+        source.src = episode.video;
+        player.load();
+      } else {
+        source.src = "";
+        player.pause();
+        player.load();
+        player.classList.add("is-hidden");
+        embedPlayer.classList.remove("is-hidden");
+        embedPlayer.src = episode.video;
+      }
 
       document.getElementById("nowTitle").textContent = episodeLabel(episode);
       document.getElementById("nowSynopsis").textContent = episode.synopsis;
@@ -640,7 +674,9 @@
 
       if (shouldScroll) {
         document.getElementById("watch").scrollIntoView({ behavior: "smooth", block: "start" });
-        player.play().catch(() => {});
+        if (isDirectVideo) {
+          player.play().catch(() => {});
+        }
       }
     }
 
